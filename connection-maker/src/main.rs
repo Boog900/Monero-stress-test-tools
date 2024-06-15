@@ -30,6 +30,8 @@ use monero_wire::{
 
 static PEERS_CORE_SYNC_DATA: OnceLock<CoreSyncData> = OnceLock::new();
 
+static NETWORK: OnceLock<Network> = OnceLock::new();
+
 /// Monero Mass Connection Maker
 ///
 /// A simple tool that just makes connections to a Monero node.
@@ -45,11 +47,23 @@ struct Args {
     /// The amount of connections you want to make to the node.
     #[arg(short, long)]
     connections: usize,
+    /// the network the node we want to connect to is on.
+    #[arg(short, long, default_value = "mainnet")]
+    network: String,
 }
 
 #[tokio::main]
 async fn main() {
     let args = Args::parse();
+
+    let network = match args.network.as_ref() {
+        "mainnet" => Network::Mainnet,
+        "testnet" => Network::Testnet,
+        "stagenet" => Network::Stagenet,
+        _ => panic!("Unknown network expected on of: mainnet, testnet or stagenet"),
+    };
+
+    let _ = NETWORK.set(network);
 
     tracing_subscriber::fmt()
         .with_max_level(Level::DEBUG)
@@ -63,7 +77,7 @@ async fn main() {
         |_| pending(),
         BasicNodeData {
             my_port: 0,
-            network_id: Network::Mainnet.network_id(),
+            network_id: network.network_id(),
             peer_id: 0,
             support_flags: PeerSupportFlags::FLUFFY_BLOCKS,
             rpc_port: 0,
@@ -95,6 +109,14 @@ async fn main() {
     }
 }
 
+fn genesis_hash() -> &'static str {
+    match *NETWORK.get().unwrap() {
+        Network::Mainnet => "418015bb9ae982a1975da7d79277c2705727a56894ba0fb246adaabb1f4632e3",
+        Network::Stagenet => "76ee3cc98646292206cd3e86f74d88b4dcc1d937088645e9b0cbca84b7ce74eb",
+        Network::Testnet => "48ca7cd3c8de5b6a4d53d2861fbdaedca141553559f9be9520068053cda8430b",
+    }
+}
+
 fn peer_request_handler() -> impl PeerRequestHandler + Clone + 'static {
     service_fn(|req| {
         async move {
@@ -105,12 +127,7 @@ fn peer_request_handler() -> impl PeerRequestHandler + Clone + 'static {
                         cumulative_difficulty_top64: 0,
                         current_height: 1,
                         pruning_seed: 0,
-                        top_id: hex::decode(
-                            "418015bb9ae982a1975da7d79277c2705727a56894ba0fb246adaabb1f4632e3",
-                        )
-                        .unwrap()
-                        .try_into()
-                        .unwrap(),
+                        top_id: hex::decode(genesis_hash()).unwrap().try_into().unwrap(),
                         top_version: 1,
                     }),
                     local_peerlist_new: vec![],
@@ -131,12 +148,7 @@ fn core_sync_service() -> impl CoreSyncSvc + Clone + 'static {
                     cumulative_difficulty_top64: 0,
                     current_height: 1,
                     pruning_seed: 0,
-                    top_id: hex::decode(
-                        "418015bb9ae982a1975da7d79277c2705727a56894ba0fb246adaabb1f4632e3",
-                    )
-                    .unwrap()
-                    .try_into()
-                    .unwrap(),
+                    top_id: hex::decode(genesis_hash()).unwrap().try_into().unwrap(),
                     top_version: 1,
                 }),
             ))

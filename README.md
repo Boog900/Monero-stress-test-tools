@@ -7,6 +7,8 @@ This repo contains 2 binaries to assist in stress testing monerod:
 
 ## Usage
 
+> You will need Rust installed to run these binaries.
+
 One of the ways to stress test `monerod` with these binaries is explained here, other methods may be possible:
 
 The first step is to set up `monerod`. Increase the amount of connections per IP with `--max-connections-per-ip=XX` and
@@ -17,11 +19,13 @@ Example: `monerod --out-peers 0 --max-connections-per-ip=1000`
 Now you will need to pop blocks to when the tx-pool was huge, i.e. `3139920`. If monerod is synced far from this height
 I found this step must be done in steps, I popped ~2000 blocks at a time and cleared the tx-pool after every pop.
 
-With `monerod` at height `3139920` start the connection maker:
+With `monerod` at height `3139920` start the connection maker (from the root of this repo):
 
 ```
 cargo run -r --bin connection-maker -- --address 127.0.0.1:18080 --connections 100
 ```
+
+> To use `connection-maker` on a different network than main net use  `--network XXX` for example `--network testnet`
 
 Wait until monerod reports the amount of connections you specified with `status`.
 
@@ -35,6 +39,5 @@ Now with the amount of connections you want you can start spamming the node:
 cargo run -r --bin tx-spam -- --target-node http://127.0.0.1:18081 --data-node  http://XXXXXXX:18081  --start-height 3139920
 ```
 
-Now you start monitoring monerod an you should see the tx-pool size increasing, I found starting at height `3139920`
-allowed me
-to grow the tx-pool to around 90MBs.
+Now you can start monitoring monerod, and you should see the tx-pool size increasing, I found starting at
+height `3139920` allowed me to grow the tx-pool to around 90MBs.
