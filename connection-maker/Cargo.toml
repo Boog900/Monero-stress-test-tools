@@ -1,0 +1,19 @@
+[package]
+name = "connection-maker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+cuprate-helper = { git = "https://github.com/Cuprate/cuprate.git", branch = "network-init" }
+monero-wire = { git = "https://github.com/Cuprate/cuprate.git", branch = "network-init" }
+monero-p2p = { git = "https://github.com/Cuprate/cuprate.git", branch = "network-init" }
+
+tokio = { version = "1.38.0", features = ["rt-multi-thread", "macros"] }
+tower = { version = "0.4.13", features = ["util"] }
+futures = { version = "0.3.30" }
+
+clap = { version = "4.5.4", features = ["derive"] }
+tracing = "0.1.40"
+tracing-subscriber = "0.3.18"
+hex = "0.4.3"
+
