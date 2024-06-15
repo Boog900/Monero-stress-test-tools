@@ -1,5 +1,5 @@
 [package]
-name = "monero-tx-spam"
+name = "tx-spam"
 version = "0.1.0"
 edition = "2021"
 
